@@ -14,12 +14,14 @@ class TextAnalyser () {
     this.outputFileName = outputFileName
   }
   def countWords (outputFileName:String = this.outputFileName): Unit = {
+
+
     val readFileRdd = sparkSession.sparkContext.textFile(inputFileName)
     val readFileFormatted =
       readFileRdd
         .map(s => s.replaceAll("[-]"," "))
-        .map(s => s.replaceAll("[\\s+]"," "))
         .map(s => s.replaceAll("[,।;?!\"]",""))
+        .map(s => s.replaceAll("[\\s+]"," "))
         .map(s=>s.trim)
         .filter(x => !x.isEmpty)
     readFileFormatted.take(10).foreach(println)
@@ -36,5 +38,16 @@ class TextAnalyser () {
       .count()
     wcounts3.write.mode(SaveMode.Overwrite).csv(outputFileName)
   }
-
+  def countWordsPerLine (outputFileName:String = this.outputFileName): Unit = {
+    sparkSession.conf.set("textinputformat.record.delimiter",",")
+    val readFileRdd = sparkSession.sparkContext.textFile(inputFileName)
+   /* val readFileFormatted =
+      readFileRdd
+        .map(s => s.replaceAll("[-]"," "))
+        .map(s => s.replaceAll("[,;\"]",""))
+        .map(s => s.replaceAll("[\\s+]"," "))
+        .map(s=>s.trim)
+        .filter(x => !x.isEmpty)*/
+    readFileRdd.take(10).foreach(println)
+  }
 }
