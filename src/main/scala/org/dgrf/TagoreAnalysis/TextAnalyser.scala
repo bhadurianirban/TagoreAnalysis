@@ -1,7 +1,8 @@
 package org.dgrf.TagoreAnalysis
 
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
+
 
 class TextAnalyser () {
   private var sparkSession:SparkSession = _
@@ -39,8 +40,30 @@ class TextAnalyser () {
     wcounts3.write.mode(SaveMode.Overwrite).csv(outputFileName)
   }
   def countWordsPerLine (outputFileName:String = this.outputFileName): Unit = {
-    sparkSession.conf.set("textinputformat.record.delimiter",",")
-    val readFileRdd = sparkSession.sparkContext.textFile(inputFileName)
+
+    val readFileRdd = sparkSession.sparkContext.wholeTextFiles(inputFileName).map(s=>s._2)
+    val readFileFormatted =
+      readFileRdd
+        .map(s => s.replaceAll("[-]"," "))
+        .map(s => s.replaceAll("[,;\"০১২৩৪৫৬৭৮৯]",""))
+        .map(s => s.replaceAll("\\s+"," "))
+        .map(s=>s.trim)
+        .filter(x => !x.isEmpty)
+    val fullText = readFileFormatted.first()
+    val sentences = fullText.split("[।?!]").map(s=>s.trim)
+    val sentencesArray = sentences.zipWithIndex.map(m=>{
+      val sentenceRow = Row(m._2,m._1)
+      sentenceRow
+    })
+
+    val schema = StructType(Seq(
+      StructField("id", IntegerType),
+      StructField("sentence", StringType)
+    ))
+    val sentencesDF = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(sentencesArray),schema)
+    sentencesDF.take(10).foreach(row=>countWordsPerSentence(row))
+
+    //foreach(_.split("[।?!]"))
    /* val readFileFormatted =
       readFileRdd
         .map(s => s.replaceAll("[-]"," "))
@@ -48,6 +71,14 @@ class TextAnalyser () {
         .map(s => s.replaceAll("[\\s+]"," "))
         .map(s=>s.trim)
         .filter(x => !x.isEmpty)*/
-    readFileRdd.take(10).foreach(println)
+    //sentenceRdd.take(10).foreach(println)
+  }
+  private def countWordsPerSentence (row:Row): Unit = {
+    val sentenceId = row.getInt(0)
+    val sentence = row.getString(1)
+    val sentenceWordCount = sentence.split("\\s+").size
+    val sentenceWithoutSpaces = sentence.replaceAll("\\s+","")
+    val sentenceCharCount = sentenceWithoutSpaces.length
+    println(sentenceId+" "+sentenceWithoutSpaces+" "+sentenceWordCount+" "+sentenceCharCount)
   }
 }
