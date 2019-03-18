@@ -10,11 +10,12 @@ object TagoreAnalysisMain {
 
     //val sqlContext = sparkSession.sqlContext
   //ss
-    val inputFileName = "/home/dgrfi/MEGA/ML/Gora.txt"
-    val outputFileName = "/home/dgrfi/MEGA/ML/GoraCount"
+    val inputFileName = "/home/bhaduri/MEGA/ML/Durgeshnandini.txt"
+    val outputFileName = "/home/bhaduri/MEGA/ML/DurgeshnandiniCount"
+    //val outputFileName = "/home/bhaduri/MEGA/ML/DurgeshnandiniSentence"
 
     val ta = new TextAnalyser(sparkSession,inputFileName,outputFileName)
-    ta.countWordsPerLine()
+    ta.countWords()
   }
 
 }

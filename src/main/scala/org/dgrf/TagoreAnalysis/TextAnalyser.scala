@@ -1,10 +1,11 @@
 package org.dgrf.TagoreAnalysis
 
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 
 
-class TextAnalyser () {
+class TextAnalyser () extends java.io.Serializable {
   private var sparkSession:SparkSession = _
   private var inputFileName:String = _
   private var outputFileName:String = _
@@ -21,7 +22,7 @@ class TextAnalyser () {
     val readFileFormatted =
       readFileRdd
         .map(s => s.replaceAll("[-]"," "))
-        .map(s => s.replaceAll("[,।;?!\"]",""))
+        .map(s => s.replaceAll("[“”,।;?!\"]",""))
         .map(s => s.replaceAll("[\\s+]"," "))
         .map(s=>s.trim)
         .filter(x => !x.isEmpty)
@@ -45,7 +46,7 @@ class TextAnalyser () {
     val readFileFormatted =
       readFileRdd
         .map(s => s.replaceAll("[-]"," "))
-        .map(s => s.replaceAll("[,;\"০১২৩৪৫৬৭৮৯]",""))
+        .map(s => s.replaceAll("[“”,;\"০১২৩৪৫৬৭৮৯]",""))
         .map(s => s.replaceAll("\\s+"," "))
         .map(s=>s.trim)
         .filter(x => !x.isEmpty)
@@ -61,7 +62,14 @@ class TextAnalyser () {
       StructField("sentence", StringType)
     ))
     val sentencesDF = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(sentencesArray),schema)
-    sentencesDF.take(10).foreach(row=>countWordsPerSentence(row))
+    val sentencesStatsSchema = StructType(Seq(
+      StructField("id", IntegerType),
+      StructField("sentenceWordCount", IntegerType),
+      StructField("sentenceCharCount", IntegerType),
+      StructField("firstTwo", StringType)
+    ))
+    val sentenceStatsEncoder  = RowEncoder(sentencesStatsSchema)
+    val sentenceStatsDF = sentencesDF.map(row=>countWordsPerSentence(row))(sentenceStatsEncoder)
 
     //foreach(_.split("[।?!]"))
    /* val readFileFormatted =
@@ -71,14 +79,23 @@ class TextAnalyser () {
         .map(s => s.replaceAll("[\\s+]"," "))
         .map(s=>s.trim)
         .filter(x => !x.isEmpty)*/
-    //sentenceRdd.take(10).foreach(println)
+    sentenceStatsDF.write.mode(SaveMode.Overwrite).csv(outputFileName)
   }
-  private def countWordsPerSentence (row:Row): Unit = {
+  private def countWordsPerSentence (row:Row): Row = {
     val sentenceId = row.getInt(0)
     val sentence = row.getString(1)
-    val sentenceWordCount = sentence.split("\\s+").size
+
+    val sentenceWordList = sentence.split("\\s+")
+    val sentenceWordCount = sentenceWordList.size
+    var firstTwo = "..."
+    if (sentenceWordCount >1) {
+       firstTwo = sentenceWordList(0)+" "+sentenceWordList(1)+" ..."
+    } else {
+       firstTwo = sentenceWordList(0)+" ..."
+    }
+
     val sentenceWithoutSpaces = sentence.replaceAll("\\s+","")
     val sentenceCharCount = sentenceWithoutSpaces.length
-    println(sentenceId+" "+sentenceWithoutSpaces+" "+sentenceWordCount+" "+sentenceCharCount)
+    Row(sentenceId,sentenceWordCount,sentenceCharCount,firstTwo.trim)
   }
 }
