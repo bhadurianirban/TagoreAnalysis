@@ -8,14 +8,14 @@ import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructT
 class TextAnalyser () extends java.io.Serializable {
   private var sparkSession:SparkSession = _
   private var inputFileName:String = _
-  private var outputFileName:String = _
-  def this (sparkSession:SparkSession,inputFileName:String,outputFileName:String) {
+
+  def this (sparkSession:SparkSession,inputFileName:String) {
     this()
     this.sparkSession = sparkSession
     this.inputFileName = inputFileName
-    this.outputFileName = outputFileName
+
   }
-  def countWords (outputFileName:String = this.outputFileName): Unit = {
+  def countWords (outputFileName:String ): Unit = {
 
 
     val readFileRdd = sparkSession.sparkContext.textFile(inputFileName)
@@ -40,7 +40,7 @@ class TextAnalyser () extends java.io.Serializable {
       .count()
     wcounts3.write.mode(SaveMode.Overwrite).csv(outputFileName)
   }
-  def countWordsPerLine (outputFileName:String = this.outputFileName): Unit = {
+  def countWordsPerLine (outputFileName:String): Unit = {
 
     val readFileRdd = sparkSession.sparkContext.wholeTextFiles(inputFileName).map(s=>s._2)
     val readFileFormatted =
