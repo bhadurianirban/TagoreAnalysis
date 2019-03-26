@@ -12,10 +12,10 @@ object TagoreAnalysisMain {
 
     //val sqlContext = sparkSession.sqlContext
   //ss
-    val inputDir = "/home/bhaduri/MEGA/ML"
-    val outputFileName = "/home/bhaduri/MEGA/ML/DurgeshnandiniCount"
+    val inputDir = "/home/dgrfi/MEGA/ML"
 
-    val inputFileList = getListOfFiles(inputDir)
+
+    val inputFileList = getListOfFiles(inputDir,".txt")
     inputFileList.foreach(x=> performAnalysis(x,sparkSession))
 
     //val outputFileName = "/home/bhaduri/MEGA/ML/DurgeshnandiniSentence"
@@ -24,10 +24,10 @@ object TagoreAnalysisMain {
     ta.countWords()*/
   }
 
-  def getListOfFiles(dir: String):List[File] = {
+  def getListOfFiles(dir: String,extension:String):List[File] = {
     val d = new File(dir)
     if (d.exists && d.isDirectory) {
-      d.listFiles.filter(_.isFile).filter(f=>f.getName.contains("txt")).toList
+      d.listFiles.filter(_.isFile).filter(f=>f.getName.endsWith(extension)).toList
     } else {
       List[File]()
     }
@@ -35,13 +35,21 @@ object TagoreAnalysisMain {
 
   def performAnalysis (f:File,sparkSession:SparkSession): Unit = {
     val fileName = f.getName.replaceAll(".txt","")
-    val outCountFileName = fileName+"Count"
-    val outSentenceFileName = fileName+"Sentence"
-    println(outCountFileName+" "+outSentenceFileName)
+    val outputFileDirectory = f.getParent+"/output/"
+    val outCountFileName = outputFileDirectory+fileName+"Count"
+    val outSentenceFileName = outputFileDirectory+fileName+"Sentence"
+    //println(outCountFileName+" "+outSentenceFileName+" "+outputFileDirectory)
     val ta = new TextAnalyser(sparkSession,f.getAbsolutePath)
     ta.countWords(outCountFileName)
     ta.countWordsPerLine(outSentenceFileName)
 
+    val wordCountFileList = getListOfFiles(outCountFileName,".csv")
+    val sentenceFileList = getListOfFiles(outSentenceFileName,".csv")
+    wordCountFileList.foreach(println)
+    sentenceFileList.foreach(println)
+
   }
+  
+  
 
 }

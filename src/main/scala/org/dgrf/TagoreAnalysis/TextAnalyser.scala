@@ -26,7 +26,7 @@ class TextAnalyser () extends java.io.Serializable {
         .map(s => s.replaceAll("[\\s+]"," "))
         .map(s=>s.trim)
         .filter(x => !x.isEmpty)
-    readFileFormatted.take(10).foreach(println)
+    //readFileFormatted.take(10).foreach(println)
     val wordsRdd = readFileFormatted.flatMap(_.split("\\s+")).map(s=> Row(s))
     //wordsRdd.take(100).foreach(println)
     val schema = StructType(Array(
