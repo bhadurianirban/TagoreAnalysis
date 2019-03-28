@@ -11,7 +11,7 @@ import scala.io.Source
 
 
 object TagoreAnalysisMain {
-  var inputDir = "/home/bhaduri/MEGA/ML/inputdata"
+  var inputDir = "/home/dgrfi/MEGA/ML/inputdata"
   var tempDir:String = _
   var outPutDir:String = _
   def main(args: Array[String]): Unit = {
@@ -24,8 +24,8 @@ object TagoreAnalysisMain {
     tempDir = d.getParent+"/temp/"
     outPutDir = d.getParent+"/output/"
 
-    /*val inputFileList = getListOfFiles(inputDir,".txt")
-    inputFileList.foreach(x=> performAnalysis(x.getName,sparkSession))*/
+    val inputFileList = getListOfFiles(inputDir,".txt")
+    inputFileList.foreach(x=> performAnalysis(x.getName,sparkSession))
 
     splitWCandCC()
   }
@@ -80,17 +80,33 @@ object TagoreAnalysisMain {
 
   def writeWC(sentenceFile:File): Unit = {
     val bufferedSource = Source.fromFile(sentenceFile)
-    val outFileWriter = new File("CC")
-    val bw = new BufferedWriter(new FileWriter(outFileWriter))
+    val sentenceFilePath = sentenceFile.getParent
+    val sentenceFileName = sentenceFile.getName.replaceAll(".csv","")
+
+    val charCountFilePath = sentenceFilePath+File.separator+"CC"
+    val charCountFileName = sentenceFileName+".txt"
+    val charCountFileFullPath = charCountFilePath+File.separator+charCountFileName
+
+    val wordCountFilePath = sentenceFilePath+File.separator+"WC"
+    val wordCountFileName = sentenceFileName+".txt"
+    val wordCountFileFullPath = wordCountFilePath+File.separator+wordCountFileName
+
+    val charCountFileWriter = new File(charCountFileFullPath)
+    val cbw = new BufferedWriter(new FileWriter(charCountFileWriter))
+
+    val wordCountFileWriter = new File(wordCountFileFullPath)
+    val wbw = new BufferedWriter(new FileWriter(wordCountFileWriter))
 
     for (line <- bufferedSource.getLines) {
-      val XYData = line.split(",")
+      val sentenceRow = line.split(",")
 
       //println (lineCounter+" n "+gheu(0)+" g "+gheu(1))
-      bw.write(XYData(0)+"\n")
+      wbw.write(sentenceRow(1)+"\n")
+      cbw.write(sentenceRow(2)+"\n")
 
     }
-    bw.close()
+    wbw.close()
+    cbw.close()
     bufferedSource.close()
   }
 }

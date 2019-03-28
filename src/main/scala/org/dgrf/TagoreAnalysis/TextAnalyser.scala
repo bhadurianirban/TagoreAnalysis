@@ -51,7 +51,7 @@ class TextAnalyser () extends java.io.Serializable {
         .map(s=>s.trim)
         .filter(x => !x.isEmpty)
     val fullText = readFileFormatted.first()
-    val sentences = fullText.split("[।?!]").map(s=>s.trim)
+    val sentences = fullText.split("[।?!|]").map(s=>s.trim)
     val sentencesArray = sentences.zipWithIndex.map(m=>{
       val sentenceRow = Row(m._2,m._1)
       sentenceRow
